@@ -26,12 +26,15 @@
 
     <canvas id="signature-pad"></canvas>
 
-    <div class="flex justify-between mt-4">
-      <button id="clear" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow">
+    <div class="flex justify-between mt-4 space-x-2">
+      <button id="clear" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow">
         Limpar
       </button>
-      <button id="save" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md shadow">
+      <button id="save" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md shadow">
         Salvar Assinatura
+      </button>
+      <button id="download" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md shadow">
+        Baixar PNG
       </button>
     </div>
 
@@ -66,7 +69,7 @@
     }
 
     window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
+    window.addEventListener('load', resizeCanvas);
 
     document.getElementById('clear').addEventListener('click', () => {
       signaturePad.clear();
@@ -85,8 +88,33 @@
       preview.src = dataURL;
       preview.classList.remove('hidden');
 
-      // Aqui você pode enviar "dataURL" para backend, salvar localmente etc.
       console.log('Assinatura capturada (base64):', dataURL);
+    });
+
+    // Função para forçar download no navegador, inclusive em iOS
+    function downloadImage(dataUrl, filename) {
+      // Cria um link temporário
+      const a = document.createElement('a');
+      a.href = dataUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+
+      if (typeof a.click === 'function') {
+        a.click();
+      } else {
+        // Para iOS Safari: abrir a imagem em nova aba para que o usuário salve manualmente
+        window.open(dataUrl, '_blank');
+      }
+      document.body.removeChild(a);
+    }
+
+    document.getElementById('download').addEventListener('click', () => {
+      if (signaturePad.isEmpty()) {
+        alert('Por favor, assine antes de baixar.');
+        return;
+      }
+      const dataURL = signaturePad.toDataURL('image/png');
+      downloadImage(dataURL, 'assinatura.png');
     });
   </script>
 </body>

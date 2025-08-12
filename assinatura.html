@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Assinatura Digital - Clínica</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Ajuste para o canvas ocupar o espaço disponível e aceitar toque */
+    #signature-pad {
+      touch-action: none; /* evita scroll enquanto desenha */
+      -ms-touch-action: none; /* compatibilidade IE */
+      border: 1px solid #d1d5db; /* Tailwind border-gray-300 */
+      border-radius: 0.375rem; /* Tailwind rounded-md */
+      width: 100%;
+      height: 12rem; /* 48 unidades = 192px */
+      display: block;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex flex-col items-center justify-center p-4">
+
+  <main class="bg-white p-6 rounded-lg shadow-md w-full max-w-md">
+    <h1 class="text-2xl font-semibold mb-4 text-center">Assine abaixo</h1>
+
+    <canvas id="signature-pad"></canvas>
+
+    <div class="flex justify-between mt-4">
+      <button id="clear" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-md shadow">
+        Limpar
+      </button>
+      <button id="save" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-md shadow">
+        Salvar Assinatura
+      </button>
+    </div>
+
+    <div class="mt-6">
+      <p class="font-medium mb-2">Pré-visualização:</p>
+      <img id="preview" alt="Preview da assinatura" class="w-full border border-gray-300 rounded-md hidden" />
+    </div>
+  </main>
+
+  <!-- Biblioteca Signature Pad -->
+  <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+  <script>
+    const canvas = document.getElementById('signature-pad');
+    const signaturePad = new SignaturePad(canvas, {
+      backgroundColor: 'rgba(0,0,0,0)', // fundo transparente
+      penColor: 'black'
+    });
+
+    // Impedir scroll e zoom no canvas durante o toque
+    canvas.style.touchAction = 'none';
+
+    canvas.addEventListener('touchstart', e => e.preventDefault(), { passive: false });
+    canvas.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+    function resizeCanvas() {
+      const ratio = Math.max(window.devicePixelRatio || 1, 1);
+      canvas.width = canvas.offsetWidth * ratio;
+      canvas.height = canvas.offsetHeight * ratio;
+      canvas.getContext('2d').scale(ratio, ratio);
+      signaturePad.clear(); // limpa para evitar distorção após resize
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    document.getElementById('clear').addEventListener('click', () => {
+      signaturePad.clear();
+      const preview = document.getElementById('preview');
+      preview.classList.add('hidden');
+      preview.src = '';
+    });
+
+    document.getElementById('save').addEventListener('click', () => {
+      if (signaturePad.isEmpty()) {
+        alert('Por favor, assine antes de salvar.');
+        return;
+      }
+      const dataURL = signaturePad.toDataURL('image/png');
+      const preview = document.getElementById('preview');
+      preview.src = dataURL;
+      preview.classList.remove('hidden');
+
+      // Aqui você pode enviar "dataURL" para backend, salvar localmente etc.
+      console.log('Assinatura capturada (base64):', dataURL);
+    });
+  </script>
+</body>
+</html>
